@@ -4,29 +4,16 @@ precision mediump float;
 uniform vec2 resolution;
 uniform float time;
 
-out vec4 out_color;
+in vec3 i_normal;
 
-uniform sampler2D buffer_A;
+out vec4 out_color;
 
 #define PI 3.14
 
 void main() {
   vec2 uv = (gl_FragCoord.xy - resolution / 2.) / min(resolution.x, resolution.y);
 
-  vec3 color = vec3(0);
-
-  float num_points = 30.;
-  for(float a = 0.; a < 2.*PI; a += 2.*PI / num_points){
-    color += texture(
-      buffer_A, 
-      gl_FragCoord.xy / resolution
-      +
-      0.03 * vec2(cos(a), sin(a)) * min(resolution.x, resolution.y) / resolution).xyz;
-  }
-
-  color /= num_points;
-
-  color *= 0.97;
+  vec3 color = vec3(1);
 
   vec2 abs_uv = abs(uv - 0.3 * vec2(2. * cos(time), sin(2. * time)));
   float t = 3.* time;
@@ -35,14 +22,9 @@ void main() {
     step(max(abs_uv.x, abs_uv.y), 0.2)
   );
 
-  if(time == 0.) color = vec3(0);
-
   color = mix(color, square.xyz, square.a);
 
-  uv = abs((gl_FragCoord.xy - resolution / 2.) / resolution);
-  vec4 boundry = vec4(vec3(0, 0, 0), step(0.5 - 0.01, max(uv.x, uv.y)));
-
-  color = mix(color, boundry.xyz, boundry.a);
+  color = color * (0.5 * dot(i_normal, normalize(vec3(1, 2, 2))) + 0.5);
 
   out_color = vec4(color, 1.);
 }
