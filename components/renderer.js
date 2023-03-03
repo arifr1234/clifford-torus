@@ -33,7 +33,7 @@ export default class Renderer extends React.Component{
     const gl = this.canvas_ref.current.getContext("webgl2");
     gl.getExtension('EXT_color_buffer_float');
 
-    // gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
 
     const m4 = twgl.m4;
@@ -51,7 +51,6 @@ export default class Renderer extends React.Component{
     this.triangles_buffer_info = twgl.createBufferInfoFromArrays(gl, {
       position: [1,1,-1,1,1,1,1,-1,1,1,-1,-1,-1,1,1,-1,1,-1,-1,-1,-1,-1,-1,1,-1,1,1,1,1,1,1,1,-1,-1,1,-1,-1,-1,-1,1,-1,-1,1,-1,1,-1,-1,1,1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,1,-1,1,1,-1,1,-1,-1,-1,-1,-1],
       normal:   [1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1],
-      texcoord: [1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1],
       indices:  [0,1,2,0,2,3,4,5,6,4,6,7,8,9,10,8,10,11,12,13,14,12,14,15,16,17,18,16,18,19,20,21,22,20,22,23],
     });
 
@@ -60,7 +59,6 @@ export default class Renderer extends React.Component{
             time: time * 0.001,
             resolution: resolution,
         };
-
 
         const fov = 30 * Math.PI / 180;
         const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
@@ -82,7 +80,7 @@ export default class Renderer extends React.Component{
 
         gl.viewport(0, 0, resolution[0], resolution[1]);
     
-        this.draw(gl, image.program, null, {...uniforms});
+        this.draw(gl, image.program, null, uniforms);
     
         requestAnimationFrame(render);
     }
