@@ -60,6 +60,10 @@ vec3 parametric_surface(vec2 uv)
   return clifford_torus_3d(uv);
 }
 
+float sigmoid(float x) {
+  return 1. / (exp(-x) + 1.);
+}
+
 void main() {
   gl_PointSize = 4.;
 
@@ -67,11 +71,11 @@ void main() {
 
   vec3 position = parametric_surface(uv);
 
-  gl_Position = u_worldViewProjection * vec4(position, 1);
+  gl_Position = u_worldViewProjection * vec4(position, 1) / vec4(1, 1, 100, 1);
 
-  float epsilon = 0.01;
+  float epsilon = 0.0001;
 
   i_normal = normalize(cross(position - parametric_surface(uv + vec2(epsilon, 0)), position - parametric_surface(uv + vec2(0, epsilon))));
 
-  i_color = vec4(vec3(1), step(sq(position), sq(20.)));
+  i_color = vec4(vec3(0, 0, 0), 1.);  // step(sq(position), sq(100.))
 }

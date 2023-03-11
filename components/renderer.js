@@ -52,18 +52,43 @@ export default class Renderer extends React.Component{
       throw Error(err);
     });
 
-    const POINTS_SIZE = [40, 40];
+    const POINTS_SIZE = [50, 50];
     const WRAP_AROUND = [true, true];
     const INCLUSIVE = [false, false];
 
-    var left_up_corners = _.range(POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1));
-    left_up_corners = _.flatten(_.range(POINTS_SIZE[1] - (WRAP_AROUND[1] ? 0 : 1)).map((y) => left_up_corners.map(x => x + y * POINTS_SIZE[0])));
+    const STEP = 5;
+    const FULL_WIDTH = _.range(0, POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1), 1);
+    const STEPS_WIDTH = _.range(0, POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1), STEP);
 
-    var coords = _.flatten(_.zip(left_up_corners, left_up_corners.map(i => i + 1), left_up_corners.map(i => i + POINTS_SIZE[0])));
+    var left_up_corners = _.flatten(
+    _.range(POINTS_SIZE[1] - (WRAP_AROUND[1] ? 0 : 1)).map((y) => {
+        function x_array(y){
+          if(y % STEP == 0) return FULL_WIDTH;
+
+          return STEPS_WIDTH;
+        }
+
+        return x_array(y).map(x => x + y * POINTS_SIZE[0]);
+      }
+    ));
+
+    var right_up_corners = left_up_corners.map(i => {
+      if((i + 1) % POINTS_SIZE[0] == 0) return i + 1 - POINTS_SIZE[0];
+      return i + 1
+    });
+
+    var left_down_corners = left_up_corners.map(i => i + POINTS_SIZE[0]);
+
+    var coords = _.flatten(_.zip(
+      left_up_corners, 
+      right_up_corners, 
+      left_down_corners,
+      right_up_corners, 
+      left_down_corners, 
+      right_up_corners.map(i => i + POINTS_SIZE[0]),
+    ));
 
     coords = coords.map(coord => coord % (POINTS_SIZE[0] * POINTS_SIZE[1]));
-
-    coords = _.concat(coords, coords.map(coord => POINTS_SIZE[0] * POINTS_SIZE[1] - 1 - coord));
 
     this.triangles_buffer_info = twgl.createBufferInfoFromArrays(gl, {
       vertex_index: { numComponents: 1, data: _.range(POINTS_SIZE[0] * POINTS_SIZE[1])},
@@ -83,7 +108,7 @@ export default class Renderer extends React.Component{
         const zNear = 0.5;
         const zFar = 10;
         const projection = m4.perspective(fov, aspect, zNear, zFar);
-        const eye = [1, 4, -6];
+        const eye = [1, 3, -6];
         const target = [0, 0, 0];
         const up = [0, 1, 0];
   
