@@ -11,7 +11,7 @@ out vec4 out_color;
 
 #define PI 3.14
 
-const float ambiant_color = 0.25;
+const float ambiant_color = 0.5;
 
 struct Light
 {
@@ -34,6 +34,7 @@ void main() {
   for(int i = 0; i < 2; i += 1){
     Light light = lights[i];
     color = mix(color, light.color, 0.5 * dot(i_normal, light.dir) + 0.5);
+    // color = mix(color, light.color, step(0.8, 0.5 * dot(i_normal, light.dir) + 0.5));
   }
 
   // if(i_color.a < 1.)

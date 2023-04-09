@@ -52,16 +52,12 @@ vec3 torus(vec2 uv)
 {
   uv *= 2. * 3.14;
 
-  return vec3(vec2(cos(uv.x), sin(uv.x)) * (cos(uv.y) + 2.), sin(uv.y));
+  return vec3(vec2(cos(uv.x), sin(uv.x)) * (cos(uv.y) + 2.), sin(uv.y)).xzy;
 }
 
 vec3 parametric_surface(vec2 uv)
 {
   return clifford_torus_3d(uv);
-}
-
-float sigmoid(float x) {
-  return 1. / (exp(-x) + 1.);
 }
 
 void main() {
@@ -76,6 +72,8 @@ void main() {
   float epsilon = 0.0001;
 
   i_normal = normalize(cross(position - parametric_surface(uv + vec2(epsilon, 0)), position - parametric_surface(uv + vec2(0, epsilon))));
+  i_normal = (u_worldInverseTranspose * vec4(i_normal, 1)).xyz;
+  // TODO: The 2 sides of a face are colored the same.
 
-  i_color = vec4(vec3(0, 0, 0), 1.);  // step(sq(position), sq(100.))
+  i_color = vec4(vec3(0, 1, 0), 1.);  // step(sq(position), sq(100.))
 }

@@ -1,11 +1,18 @@
 import React from 'react'
 
 import * as twgl from 'twgl.js'
+const m4 = twgl.m4;
 
 import _ from 'lodash';
 
-import vertex_shader from "../shaders/vs.glsl";
-import fragment_shader from "../shaders/fs.glsl";
+import image_vertex_shader from "../shaders/image_vertex_shader.glsl";
+import image_fragment_shader from "../shaders/image_fragment_shader.glsl";
+import vertex_generator_vertex_shader from "../shaders/vertex_generator_vertex_shader.glsl";
+import dummy_fragment_shader from "../shaders/dummy_fragment_shader.glsl";
+
+const POINTS_SIZE = [50, 50];
+const WRAP_AROUND = [true, true];
+const INCLUSIVE = [false, false];
 
 export default class Renderer extends React.Component{
   constructor(props) {
@@ -40,32 +47,50 @@ export default class Renderer extends React.Component{
     gl.enable(gl.DEPTH_TEST);
     // gl.enable(gl.CULL_FACE);
 
-    const m4 = twgl.m4;
-
     twgl.resizeCanvasToDisplaySize(gl.canvas);
     const resolution = [gl.canvas.width, gl.canvas.height];
     console.log(resolution);
 
     const image = {};
+    const vertex_generator = {};
 
-    image.program = twgl.createProgramInfo(gl, [vertex_shader, fragment_shader], err => {
-      throw Error(err);
+    vertex_generator.program = twgl.createProgramInfo(gl, [vertex_generator_vertex_shader, dummy_fragment_shader]);
+
+    image.program = twgl.createProgramInfo(gl, [image_vertex_shader, image_fragment_shader]);
+
+    this.triangles_buffer_info = twgl.createBufferInfoFromArrays(gl, {
+      vertex_index: { numComponents: 1, data: _.range(POINTS_SIZE[0] * POINTS_SIZE[1])},  // TODO: Replace with gl_VertexID
+      indices: { numComponents: 3, data: this.generate_indices()},
     });
 
-    const POINTS_SIZE = [50, 50];
-    const WRAP_AROUND = [true, true];
-    const INCLUSIVE = [false, false];
+    const render = (time) => {
+        const uniforms = {
+            time: time * 0.001,
+            resolution: resolution,
+            size: [POINTS_SIZE[0] - (INCLUSIVE[0] ? 1 : 0), POINTS_SIZE[1] - (INCLUSIVE[1] ? 1 : 0)],
+            rotation_4d: m4.rotateY(m4.identity(), time * 0.001)
+        };
 
+        gl.viewport(0, 0, resolution[0], resolution[1]);
+    
+        this.draw(gl, image.program, null, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
+    
+        requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  }
+
+  generate_indices() {
     const STEP = 5;
-    const FULL_WIDTH = _.range(0, POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1), 1);
-    const STEPS_WIDTH = _.range(0, POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1), STEP);
+    const full_width = _.range(0, POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1), 1);
+    const steps_width = _.range(0, POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1), STEP);
 
     var left_up_corners = _.flatten(
     _.range(POINTS_SIZE[1] - (WRAP_AROUND[1] ? 0 : 1)).map((y) => {
-        function x_array(y){
-          if(y % STEP == 0) return FULL_WIDTH;
+        function x_array(y) {
+          if(y % STEP == 0) return full_width;
 
-          return STEPS_WIDTH;
+          return steps_width;
         }
 
         return x_array(y).map(x => x + y * POINTS_SIZE[0]);
@@ -79,7 +104,7 @@ export default class Renderer extends React.Component{
 
     var left_down_corners = left_up_corners.map(i => i + POINTS_SIZE[0]);
 
-    var coords = _.flatten(_.zip(
+    var indices = _.flatten(_.zip(
       left_up_corners, 
       right_up_corners, 
       left_down_corners,
@@ -88,45 +113,27 @@ export default class Renderer extends React.Component{
       right_up_corners.map(i => i + POINTS_SIZE[0]),
     ));
 
-    coords = coords.map(coord => coord % (POINTS_SIZE[0] * POINTS_SIZE[1]));
+    return indices.map(i => i % (POINTS_SIZE[0] * POINTS_SIZE[1]));
+  }
 
-    this.triangles_buffer_info = twgl.createBufferInfoFromArrays(gl, {
-      vertex_index: { numComponents: 1, data: _.range(POINTS_SIZE[0] * POINTS_SIZE[1])},
-      indices: { numComponents: 3, data: coords},
-    });
+  calculate_rotation_matrices(gl, time) {
+    const fov = 30 * Math.PI / 180;
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const zNear = 0.5;
+    const zFar = 10;
+    const projection = m4.perspective(fov, aspect, zNear, zFar);
+    const eye = [1, 3, -6];
+    const target = [0, 0, 0];
+    const up = [0, 1, 0];
 
-    const render = (time) => {
-        const uniforms = {
-            time: time * 0.001,
-            resolution: resolution,
-            size: [POINTS_SIZE[0] - (INCLUSIVE[0] ? 1 : 0), POINTS_SIZE[1] - (INCLUSIVE[1] ? 1 : 0)],
-            rotation_4d: m4.rotateY(m4.identity(), time * 0.001)
-        };
+    const camera = m4.lookAt(eye, target, up);
+    const view = m4.inverse(camera);
+    const viewProjection = m4.multiply(projection, view);
+    const world = m4.rotationY(0.5 * time * 0.001);
 
-        const fov = 30 * Math.PI / 180;
-        const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-        const zNear = 0.5;
-        const zFar = 10;
-        const projection = m4.perspective(fov, aspect, zNear, zFar);
-        const eye = [1, 3, -6];
-        const target = [0, 0, 0];
-        const up = [0, 1, 0];
-  
-        const camera = m4.lookAt(eye, target, up);
-        const view = m4.inverse(camera);
-        const viewProjection = m4.multiply(projection, view);
-        const world = m4.rotationY(0.5 * time * 0.001);
-  
-        uniforms.u_worldViewProjection = m4.multiply(viewProjection, world);
-        uniforms.u_worldInverseTranspose = m4.transpose(m4.inverse(world));
-
-
-        gl.viewport(0, 0, resolution[0], resolution[1]);
-    
-        this.draw(gl, image.program, null, uniforms);
-    
-        requestAnimationFrame(render);
+    return {
+      u_worldViewProjection: m4.multiply(viewProjection, world),
+      u_worldInverseTranspose: m4.transpose(m4.inverse(world)),
     }
-    requestAnimationFrame(render);
   }
 }
