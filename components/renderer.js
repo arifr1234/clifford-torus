@@ -27,17 +27,29 @@ export default class Renderer extends React.Component{
     return <canvas ref={this.canvas_ref} style={{width: this.width, height: this.height}}></canvas>
   }
 
-  draw(gl, program, to, uniforms)
+  draw(gl, program, buffer_info, to, uniforms, transform_feedback=null)
   {
     twgl.bindFramebufferInfo(gl, to);
 
     gl.useProgram(program.program);
-    twgl.setBuffersAndAttributes(gl, program, this.triangles_buffer_info);
-    twgl.setUniforms(program, uniforms);
-    // twgl.drawBufferInfo(gl, this.triangles_buffer_info);
 
-    // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.drawElements(gl.TRIANGLES, this.triangles_buffer_info.numElements, gl.UNSIGNED_SHORT, 0);
+    if(transform_feedback) {
+      gl.enable(gl.RASTERIZER_DISCARD);
+      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transform_feedback);
+      gl.beginTransformFeedback(gl.TRIANGLES);
+    }
+
+    twgl.setBuffersAndAttributes(gl, program, buffer_info);
+    twgl.setUniforms(program, uniforms);
+    
+    twgl.drawBufferInfo(gl, buffer_info);
+
+    if(transform_feedback) {
+      gl.endTransformFeedback();
+      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+  
+      gl.disable(gl.RASTERIZER_DISCARD);
+    }
   }
 
   componentDidMount() {
@@ -45,7 +57,7 @@ export default class Renderer extends React.Component{
     gl.getExtension('EXT_color_buffer_float');
 
     gl.enable(gl.DEPTH_TEST);
-    // gl.enable(gl.CULL_FACE);
+    // gl.enable(gl.CULL_FACE);  // TODO: gl.CULL_FACE
 
     twgl.resizeCanvasToDisplaySize(gl.canvas);
     const resolution = [gl.canvas.width, gl.canvas.height];
@@ -54,13 +66,26 @@ export default class Renderer extends React.Component{
     const image = {};
     const vertex_generator = {};
 
-    vertex_generator.program = twgl.createProgramInfo(gl, [vertex_generator_vertex_shader, dummy_fragment_shader]);
+    vertex_generator.program = twgl.createProgramInfo(gl, [vertex_generator_vertex_shader, dummy_fragment_shader], 
+      {
+        transformFeedbackVaryings: [
+          "position",
+          "normal",
+        ],
+      }
+    );
+
+    vertex_generator.vertex_buffer = twgl.createBufferInfoFromArrays(gl, {
+      position: { numComponents: 3, data: POINTS_SIZE[0] * POINTS_SIZE[1] * 3, drawType: gl.DYNAMIC_DRAW},
+      normal: { numComponents: 3, data: POINTS_SIZE[0] * POINTS_SIZE[1] * 3, drawType: gl.DYNAMIC_DRAW},
+      indices: { numComponents: 3, data: this.generate_indices()},
+    });
+    vertex_generator.transform_feedback = twgl.createTransformFeedback(gl, vertex_generator.program, vertex_generator.vertex_buffer);
 
     image.program = twgl.createProgramInfo(gl, [image_vertex_shader, image_fragment_shader]);
 
     this.triangles_buffer_info = twgl.createBufferInfoFromArrays(gl, {
       vertex_index: { numComponents: 1, data: _.range(POINTS_SIZE[0] * POINTS_SIZE[1])},  // TODO: Replace with gl_VertexID
-      indices: { numComponents: 3, data: this.generate_indices()},
     });
 
     const render = (time) => {
@@ -68,12 +93,18 @@ export default class Renderer extends React.Component{
             time: time * 0.001,
             resolution: resolution,
             size: [POINTS_SIZE[0] - (INCLUSIVE[0] ? 1 : 0), POINTS_SIZE[1] - (INCLUSIVE[1] ? 1 : 0)],
-            rotation_4d: m4.rotateY(m4.identity(), time * 0.001)
         };
 
         gl.viewport(0, 0, resolution[0], resolution[1]);
-    
-        this.draw(gl, image.program, null, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
+
+        this.draw(gl, vertex_generator.program, this.triangles_buffer_info, null, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
+        this.draw(gl, image.program, vertex_generator.vertex_buffer, null, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
+
+        // const arr = new Float32Array(3 * POINTS_SIZE[0] * POINTS_SIZE[1]);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, vertex_generator.vertex_buffer.attribs.normal.buffer);
+        // gl.getBufferSubData(gl.ARRAY_BUFFER, 0, arr);
+        // console.log(arr[0]);
+        // console.log(vertex_generator.vertex_buffer);
     
         requestAnimationFrame(render);
     }
