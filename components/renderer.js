@@ -89,19 +89,6 @@ export default class Renderer extends React.Component{
     });
     vertex_generator.transform_feedback = twgl.createTransformFeedback(gl, vertex_generator.program, vertex_generator.vertex_buffer);
 
-
-        // gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, vertex_generator.transform_feedback);
-        // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
-        // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
-        // gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
-
-        // gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, vertex_generator.transform_feedback);
-        // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, vertex_generator.vertex_buffer.attribs.position.buffer);
-        // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, vertex_generator.vertex_buffer.attribs.normal.buffer);
-        // gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);    
-
-
-
     image.program = twgl.createProgramInfo(gl, [image_vertex_shader, image_fragment_shader]);
 
     this.triangles_buffer_info = twgl.createBufferInfoFromArrays(gl, {
