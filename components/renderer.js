@@ -27,29 +27,36 @@ export default class Renderer extends React.Component{
     return <canvas ref={this.canvas_ref} style={{width: this.width, height: this.height}}></canvas>
   }
 
-  draw(gl, program, buffer_info, to, uniforms, transform_feedback=null)
+  draw(gl, program, buffer_info, uniforms, frame_buffer=null)
   {
-    twgl.bindFramebufferInfo(gl, to);
+    twgl.bindFramebufferInfo(gl, frame_buffer);
 
     gl.useProgram(program.program);
-
-    if(transform_feedback) {
-      gl.enable(gl.RASTERIZER_DISCARD);
-      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transform_feedback);
-      gl.beginTransformFeedback(gl.TRIANGLES);
-    }
 
     twgl.setBuffersAndAttributes(gl, program, buffer_info);
     twgl.setUniforms(program, uniforms);
     
     twgl.drawBufferInfo(gl, buffer_info);
 
-    if(transform_feedback) {
-      gl.endTransformFeedback();
-      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
-  
-      gl.disable(gl.RASTERIZER_DISCARD);
-    }
+    // gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  }
+
+  transform_feedback_draw(gl, program, buffer_info, uniforms, transform_feedback) {
+    gl.useProgram(program.program);
+
+    gl.enable(gl.RASTERIZER_DISCARD);
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transform_feedback);
+    gl.beginTransformFeedback(gl.TRIANGLES);
+
+    twgl.setBuffersAndAttributes(gl, program, buffer_info);
+    twgl.setUniforms(program, uniforms);
+    
+    twgl.drawBufferInfo(gl, buffer_info);
+
+    gl.endTransformFeedback();
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+
+    gl.disable(gl.RASTERIZER_DISCARD);
   }
 
   componentDidMount() {
@@ -82,6 +89,19 @@ export default class Renderer extends React.Component{
     });
     vertex_generator.transform_feedback = twgl.createTransformFeedback(gl, vertex_generator.program, vertex_generator.vertex_buffer);
 
+
+        // gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, vertex_generator.transform_feedback);
+        // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+        // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
+        // gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+
+        // gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, vertex_generator.transform_feedback);
+        // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, vertex_generator.vertex_buffer.attribs.position.buffer);
+        // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, vertex_generator.vertex_buffer.attribs.normal.buffer);
+        // gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);    
+
+
+
     image.program = twgl.createProgramInfo(gl, [image_vertex_shader, image_fragment_shader]);
 
     this.triangles_buffer_info = twgl.createBufferInfoFromArrays(gl, {
@@ -97,15 +117,9 @@ export default class Renderer extends React.Component{
 
         gl.viewport(0, 0, resolution[0], resolution[1]);
 
-        this.draw(gl, vertex_generator.program, this.triangles_buffer_info, null, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
-        this.draw(gl, image.program, vertex_generator.vertex_buffer, null, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
+        this.transform_feedback_draw(gl, vertex_generator.program, this.triangles_buffer_info, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
+        this.draw(gl, image.program, vertex_generator.vertex_buffer, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
 
-        // const arr = new Float32Array(3 * POINTS_SIZE[0] * POINTS_SIZE[1]);
-        // gl.bindBuffer(gl.ARRAY_BUFFER, vertex_generator.vertex_buffer.attribs.normal.buffer);
-        // gl.getBufferSubData(gl.ARRAY_BUFFER, 0, arr);
-        // console.log(arr[0]);
-        // console.log(vertex_generator.vertex_buffer);
-    
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
