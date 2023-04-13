@@ -37,8 +37,6 @@ export default class Renderer extends React.Component{
     twgl.setUniforms(program, uniforms);
     
     twgl.drawBufferInfo(gl, buffer_info);
-
-    // gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
   transform_feedback_draw(gl, program, buffer_info, uniforms, transform_feedback) {
@@ -95,6 +93,8 @@ export default class Renderer extends React.Component{
       vertex_index: { numComponents: 1, data: _.range(POINTS_SIZE[0] * POINTS_SIZE[1])},  // TODO: Replace with gl_VertexID
     });
 
+    var frame = 0;
+        
     const render = (time) => {
         const uniforms = {
             time: time * 0.001,
@@ -107,6 +107,8 @@ export default class Renderer extends React.Component{
         this.transform_feedback_draw(gl, vertex_generator.program, this.triangles_buffer_info, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
         this.draw(gl, image.program, vertex_generator.vertex_buffer, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
 
+        frame += 1;
+        
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
