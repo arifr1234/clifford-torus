@@ -81,8 +81,8 @@ export default class Renderer extends React.Component{
     );
 
     vertex_generator.vertex_buffer = twgl.createBufferInfoFromArrays(gl, {
-      position: { numComponents: 3, data: POINTS_SIZE[0] * POINTS_SIZE[1] * 3, drawType: gl.DYNAMIC_DRAW},
-      normal: { numComponents: 3, data: POINTS_SIZE[0] * POINTS_SIZE[1] * 3, drawType: gl.DYNAMIC_DRAW},
+      position: { numComponents: 3, data: POINTS_SIZE[0] * POINTS_SIZE[1] * 3, type: gl.FLOAT, drawType: gl.DYNAMIC_DRAW},
+      normal: { numComponents: 3, data: POINTS_SIZE[0] * POINTS_SIZE[1] * 3, type: gl.FLOAT, drawType: gl.DYNAMIC_DRAW},
       indices: { numComponents: 3, data: this.generate_indices()},
     });
     vertex_generator.transform_feedback = twgl.createTransformFeedback(gl, vertex_generator.program, vertex_generator.vertex_buffer);
