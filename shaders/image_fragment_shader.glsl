@@ -11,7 +11,7 @@ out vec4 out_color;
 
 #define PI 3.14
 
-const float ambiant_color = 0.2;
+const float ambiant_color = 0.3;
 
 struct Light
 {
@@ -28,7 +28,7 @@ const Light lights[] = Light[](
 void main() {
   vec2 uv = (gl_FragCoord.xy - resolution / 2.) / min(resolution.x, resolution.y);
 
-  vec3 color = ambiant_color * i_color.rgb;
+  vec3 color = i_color.rgb;
 
   
   for(int i = 0; i < lights.length(); i += 1) {
