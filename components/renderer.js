@@ -24,7 +24,7 @@ export default class Renderer extends React.Component{
   }
 
   render() {
-    return <canvas ref={this.canvas_ref} style={{width: this.width, height: this.height}}></canvas>
+    return <canvas ref={this.canvas_ref} style={{width: this.width, height: this.height, backgroundColor: "black"}}></canvas>
   }
 
   draw(gl, program, buffer_info, uniforms, frame_buffer=null)
@@ -81,11 +81,20 @@ export default class Renderer extends React.Component{
     );
 
     vertex_generator.vertex_buffer = twgl.createBufferInfoFromArrays(gl, {
-      position: { numComponents: 3, data: POINTS_SIZE[0] * POINTS_SIZE[1] * 3, type: gl.FLOAT, drawType: gl.DYNAMIC_DRAW},
-      normal: { numComponents: 3, data: POINTS_SIZE[0] * POINTS_SIZE[1] * 3, type: gl.FLOAT, drawType: gl.DYNAMIC_DRAW},
-      indices: { numComponents: 3, data: this.generate_indices()},
+      position: { numComponents: 3, data: POINTS_SIZE[0] * (POINTS_SIZE[1] + 1) * 3, type: gl.FLOAT, drawType: gl.DYNAMIC_DRAW},
+      normal: { numComponents: 3, data: POINTS_SIZE[0] * (POINTS_SIZE[1] + 1) * 3, type: gl.FLOAT, drawType: gl.DYNAMIC_DRAW},
     });
     vertex_generator.transform_feedback = twgl.createTransformFeedback(gl, vertex_generator.program, vertex_generator.vertex_buffer);
+
+    const BYTES_IN_FLOAT = 4;
+    const BYTES_IN_VEC3 = BYTES_IN_FLOAT * 3;
+    const neighboring_vertex_buffer_info = twgl.createBufferInfoFromArrays(gl, {
+      position: {numComponents: 3, buffer: vertex_generator.vertex_buffer.attribs.position.buffer, stride: BYTES_IN_VEC3, offset: 0},
+      position_right: {numComponents: 3, buffer: vertex_generator.vertex_buffer.attribs.position.buffer, stride: BYTES_IN_VEC3, offset: BYTES_IN_VEC3},
+      position_down: {numComponents: 3, buffer: vertex_generator.vertex_buffer.attribs.position.buffer, stride: BYTES_IN_VEC3, offset: POINTS_SIZE[0] * BYTES_IN_VEC3},
+      normal: vertex_generator.vertex_buffer.attribs.normal,
+      indices: { numComponents: 3, data: this.generate_indices()},
+    })
 
     image.program = twgl.createProgramInfo(gl, [image_vertex_shader, image_fragment_shader]);
 
@@ -104,8 +113,12 @@ export default class Renderer extends React.Component{
 
         gl.viewport(0, 0, resolution[0], resolution[1]);
 
+        // gl.clear(gl.COLOR_BUFFER_BIT);
+        // gl.clearColor(0, 0, 0, 1.);
+
+    
         if(frame != 1)this.transform_feedback_draw(gl, vertex_generator.program, this.triangles_buffer_info, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
-        this.draw(gl, image.program, vertex_generator.vertex_buffer, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
+        this.draw(gl, image.program, neighboring_vertex_buffer_info, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
 
         frame += 1;
         
