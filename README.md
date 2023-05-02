@@ -5,3 +5,11 @@ A simple `TWGL.js` template, with `babel-plugin-inline-import` and `babel-inline
 ```git remote remove origin```  
 2. Change all occurrences of `"next-js-twgl-template"` in `package.json` and `package-lock.json` to the name of your choice. (you can also remove `package-lock.json`)
 3. Run ```npm i```
+
+## TODO: 
+* WIP: Debug the  
+  ```GL_INVALID_OPERATION: A transform feedback buffer that would be written to is also bound to a non-transform-feedback target, which would cause undefined behavior.``` (`if(frame != 0)`)  
+  error, using `webgl-lint.js`.
+* Use `gl_FrontFacing` to reverse normals and improve lighting.
+* Fix normal calculation in edges.
+* Remove old normal calculation and benchmark with the old branch.
