@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
   swcMinify: true,
   webpack: (config, { defaultLoaders, dir }) => {
     const rulesExceptBabelLoaderRule = config.module.rules.filter(
