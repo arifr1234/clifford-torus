@@ -25,7 +25,6 @@ void main() {
   vec3 normal = normalize(cross(position - position_right, position - position_down));
 
   i_normal = (u_worldInverseTranspose * vec4(normal, 1)).xyz;
-  // TODO: The 2 sides of a face are colored the same.
 
-  i_color = vec4(vec3(1, 1, 0), 1.);  // step(sq(position), sq(100.))
+  i_color = vec4(vec3(0.5, 0.5, 0.5), 1.);  // step(sq(position), sq(100.))
 }
