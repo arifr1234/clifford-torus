@@ -94,7 +94,12 @@ export default class Renderer extends React.Component{
       position_down: {numComponents: 3, buffer: vertex_generator.vertex_buffer.attribs.position.buffer, stride: BYTES_IN_VEC3, offset: POINTS_SIZE[0] * BYTES_IN_VEC3},
       normal: vertex_generator.vertex_buffer.attribs.normal,
       indices: { numComponents: 3, data: this.generate_indices()},
-    })
+    });
+
+    const dummy_vertex_buffer_info = twgl.createBufferInfoFromArrays(gl, {
+      position_right: {numComponents: 1, data: 1, type: gl.FLOAT},
+      position_down: {numComponents: 1, data: 1, type: gl.FLOAT},
+    });
 
     image.program = twgl.createProgramInfo(gl, [image_vertex_shader, image_fragment_shader]);
 
@@ -117,8 +122,14 @@ export default class Renderer extends React.Component{
         // gl.clearColor(0, 0, 0, 1.);
 
     
-        if(frame != 1)this.transform_feedback_draw(gl, vertex_generator.program, this.triangles_buffer_info, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
+        this.transform_feedback_draw(gl, vertex_generator.program, this.triangles_buffer_info, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
         this.draw(gl, image.program, neighboring_vertex_buffer_info, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
+        
+        twgl.setBuffersAndAttributes(gl, image.program, dummy_vertex_buffer_info);  
+        /*
+        Enables the next transform feedback draw call to write into buffers that were bound to the vertex buffer object by the regular draw call using gl.vertexAttribPointer, 
+        by calling gl.vertexAttribPointer again with dummy buffers.
+        */
 
         frame += 1;
         
