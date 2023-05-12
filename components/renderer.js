@@ -163,8 +163,8 @@ export default class Renderer extends React.Component{
       right_up_corners, 
       left_down_corners,
       right_up_corners, 
-      left_down_corners, 
       right_up_corners.map(i => i + POINTS_SIZE[0]),
+      left_down_corners, 
     ));
 
     return indices.map(i => i % (POINTS_SIZE[0] * POINTS_SIZE[1]));
