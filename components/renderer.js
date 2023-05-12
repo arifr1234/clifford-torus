@@ -117,10 +117,6 @@ export default class Renderer extends React.Component{
         };
 
         gl.viewport(0, 0, resolution[0], resolution[1]);
-
-        // gl.clear(gl.COLOR_BUFFER_BIT);
-        // gl.clearColor(0, 0, 0, 1.);
-
     
         this.transform_feedback_draw(gl, vertex_generator.program, this.triangles_buffer_info, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
         this.draw(gl, image.program, neighboring_vertex_buffer_info, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
