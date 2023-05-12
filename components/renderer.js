@@ -127,7 +127,7 @@ export default class Renderer extends React.Component{
         
         twgl.setBuffersAndAttributes(gl, image.program, dummy_vertex_buffer_info);  
         /*
-        Enables the next transform feedback draw call to write into buffers that were bound to the vertex buffer object by the regular draw call using gl.vertexAttribPointer, 
+        Enables the next transform feedback draw call to write into buffers that were bound by the regular draw call using gl.vertexAttribPointer, 
         by calling gl.vertexAttribPointer again with dummy buffers.
         */
 
