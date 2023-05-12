@@ -7,9 +7,6 @@ A simple `TWGL.js` template, with `babel-plugin-inline-import` and `babel-inline
 3. Run ```npm i```
 
 ## TODO: 
-* WIP: Debug the  
-  ```GL_INVALID_OPERATION: A transform feedback buffer that would be written to is also bound to a non-transform-feedback target, which would cause undefined behavior.``` (`if(frame != 0)`)  
-  error, using `webgl-lint.js`.
 * Use `gl_FrontFacing` to reverse normals and improve lighting.
 * Fix normal calculation in edges.
 * Remove old normal calculation and benchmark with the old branch.
