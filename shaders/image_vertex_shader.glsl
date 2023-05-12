@@ -26,5 +26,5 @@ void main() {
 
   i_normal = (u_worldInverseTranspose * vec4(normal, 1)).xyz;
 
-  i_color = vec4(vec3(0.5, 0.5, 0.5), 1.);  // step(sq(position), sq(100.))
+  i_color = vec4(0.3 * vec3(1., 1., 1.), 1.);  // step(sq(position), sq(100.))
 }
