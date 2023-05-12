@@ -21,7 +21,8 @@ struct Light
 
 const Light lights[] = Light[](
   Light(normalize(vec3(1, 2, 2)), vec3(0, 1, 1)),
-  Light(normalize(vec3(-1, -2, -2)), vec3(1, 0, 1))
+  Light(normalize(vec3(-2, 1, 2)), vec3(1, 0, 1)),
+  Light(normalize(vec3(1, -2, 2)), vec3(1, 1, 0))
 );
 
 
@@ -33,8 +34,9 @@ void main() {
   
   for(int i = 0; i < lights.length(); i += 1) {
     Light light = lights[i];
-    color = mix(color, light.color, (1. - ambiant_color) * pow(0.5 * dot(i_normal, light.dir) + 0.5, 1.));
-    // color = mix(color, light.color, step(0.8, 0.5 * dot(i_normal, light.dir) + 0.5));
+    vec3 normal = gl_FrontFacing ? i_normal : -i_normal;
+    color = mix(color, light.color, (1. - ambiant_color) * pow(0.5 * dot(normal, light.dir) + 0.5, 1.));
+    // color = mix(color, light.color, step(0.8, 0.5 * dot(normal, light.dir) + 0.5));
   }
 
   // if(i_color.a < 1.)
