@@ -62,7 +62,6 @@ export default class Renderer extends React.Component{
     gl.getExtension('EXT_color_buffer_float');
 
     gl.enable(gl.DEPTH_TEST);
-    // gl.enable(gl.CULL_FACE);  // TODO: gl.CULL_FACE
 
     twgl.resizeCanvasToDisplaySize(gl.canvas);
     const resolution = [gl.canvas.width, gl.canvas.height];
