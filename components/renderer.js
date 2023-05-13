@@ -75,7 +75,7 @@ export default class Renderer extends React.Component{
       {
         transformFeedbackVaryings: [
           "position",
-          "normal",
+          // "normal",
         ],
       }
     );

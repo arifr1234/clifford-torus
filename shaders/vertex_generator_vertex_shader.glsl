@@ -7,7 +7,7 @@ uniform vec2 size;
 in float vertex_index;
 
 out vec3 position;
-out vec3 normal;
+// out vec3 normal;
 
 #define sq(x) dot(x, x)
 
@@ -47,5 +47,5 @@ void main() {
   vec2 uv = vec2(mod(vertex_index, size[0]), floor(vertex_index / size[0])) / size;
 
   position = parametric_surface(uv);
-  normal = normalize(cross(position - parametric_surface(uv + vec2(epsilon, 0)), position - parametric_surface(uv + vec2(0, epsilon))));
+  // normal = normalize(cross(position - parametric_surface(uv + vec2(epsilon, 0)), position - parametric_surface(uv + vec2(0, epsilon))));
 }
