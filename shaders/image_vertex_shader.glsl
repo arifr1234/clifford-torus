@@ -16,8 +16,6 @@ out vec4 i_color;
 #define sq(x) dot(x, x)
 
 void main() {
-  gl_PointSize = 4.;
-
   gl_Position = u_worldViewProjection * vec4(position, 1) / vec4(1, 1, 100, 1);
 
   float epsilon = 0.0001;
