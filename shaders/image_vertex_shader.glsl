@@ -22,12 +22,14 @@ void main() {
 
   float epsilon = 0.0001;
 
-  vec3 normal = normalize(cross(position - position_right, position - position_down));
+  vec2 uv = vec2(gl_VertexID % size.x, gl_VertexID / size.x) / vec2(size);
 
-  if(gl_VertexID / int(size.x) == int(size.y) - 1)
-  {
-    normal = normalize(cross(position - position_left, position - position_up));
-  }
+  vec3 normal = normalize(
+    (1. - uv.y) * (1. - uv.x) * cross(position - position_right, position - position_down) +
+    (1. - uv.y) * uv.x        * cross(position - position_down, position - position_left) +
+    uv.y * uv.x               * cross(position - position_left, position - position_up) +
+    uv.y * (1. - uv.x)        * cross(position - position_up, position - position_right)
+  );
 
   i_normal = (u_worldInverseTranspose * vec4(normal, 1)).xyz;
 
