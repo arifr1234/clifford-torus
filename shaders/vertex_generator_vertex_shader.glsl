@@ -2,9 +2,7 @@
 
 uniform mat4 rotation_4d;
 
-uniform vec2 size;
-
-in float vertex_index;
+uniform ivec2 size;
 
 out vec3 position;
 // out vec3 normal;
@@ -44,7 +42,7 @@ vec3 parametric_surface(vec2 uv)
 const float epsilon = 0.0001;
 
 void main() {
-  vec2 uv = vec2(mod(vertex_index, size[0]), floor(vertex_index / size[0])) / size;
+  vec2 uv = vec2(gl_VertexID % size[0], gl_VertexID / size[0]) / vec2(size);
 
   position = parametric_surface(uv);
   // normal = normalize(cross(position - parametric_surface(uv + vec2(epsilon, 0)), position - parametric_surface(uv + vec2(0, epsilon))));

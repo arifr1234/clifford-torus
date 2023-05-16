@@ -39,17 +39,16 @@ export default class Renderer extends React.Component{
     twgl.drawBufferInfo(gl, buffer_info);
   }
 
-  transform_feedback_draw(gl, program, buffer_info, uniforms, transform_feedback) {
+  transform_feedback_draw(gl, program, count, uniforms, transform_feedback) {
     gl.useProgram(program.program);
 
     gl.enable(gl.RASTERIZER_DISCARD);
     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transform_feedback);
     gl.beginTransformFeedback(gl.TRIANGLES);
 
-    twgl.setBuffersAndAttributes(gl, program, buffer_info);
     twgl.setUniforms(program, uniforms);
     
-    twgl.drawBufferInfo(gl, buffer_info);
+    gl.drawArrays(gl.TRIANGLES, 0, count);
 
     gl.endTransformFeedback();
     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
@@ -79,32 +78,57 @@ export default class Renderer extends React.Component{
       }
     );
 
-    vertex_generator.vertex_buffer = twgl.createBufferInfoFromArrays(gl, {
-      position: { numComponents: 3, data: POINTS_SIZE[0] * (POINTS_SIZE[1] + 1) * 3, type: gl.FLOAT, drawType: gl.DYNAMIC_DRAW},
-      normal: { numComponents: 3, data: POINTS_SIZE[0] * (POINTS_SIZE[1] + 1) * 3, type: gl.FLOAT, drawType: gl.DYNAMIC_DRAW},
-    });
-    vertex_generator.transform_feedback = twgl.createTransformFeedback(gl, vertex_generator.program, vertex_generator.vertex_buffer);
-
     const BYTES_IN_FLOAT = 4;
     const BYTES_IN_VEC3 = BYTES_IN_FLOAT * 3;
+
+    const VERTEX_START_EXTRA_ROWS = 1;
+    const VERTEX_END_EXTRA_ROWS = 1;
+
+    const VERTEX_BUFFER_LENGTH = POINTS_SIZE[0] * (POINTS_SIZE[1] + VERTEX_START_EXTRA_ROWS + VERTEX_END_EXTRA_ROWS);
+    const VERTEX_BUFFER_OFFSET = POINTS_SIZE[0] * VERTEX_START_EXTRA_ROWS;
+
+    vertex_generator.vertex_buffer = twgl.createBufferInfoFromArrays(gl, {
+      position: { 
+        numComponents: 3, 
+        data: VERTEX_BUFFER_LENGTH * 3, 
+        offset: VERTEX_BUFFER_OFFSET * BYTES_IN_VEC3, 
+        type: gl.FLOAT,
+        drawType: gl.DYNAMIC_DRAW
+      },
+      normal: { 
+        numComponents: 3, 
+        data: VERTEX_BUFFER_LENGTH * 3, 
+        offset: VERTEX_BUFFER_OFFSET * BYTES_IN_VEC3, 
+        type: gl.FLOAT, 
+        drawType: gl.DYNAMIC_DRAW
+      },
+    });
+
+    vertex_generator.vertex_buffer.attribs.position.size = VERTEX_BUFFER_LENGTH * BYTES_IN_VEC3;  // Configuring size this way because of a bug in twgl.createTransformFeedback: https://github.com/greggman/twgl.js/issues/222
+
+    vertex_generator.transform_feedback = twgl.createTransformFeedback(gl, vertex_generator.program, vertex_generator.vertex_buffer);
+
+    const vertex_positions = vertex_generator.vertex_buffer.attribs.position.buffer;
+
     const neighboring_vertex_buffer_info = twgl.createBufferInfoFromArrays(gl, {
-      position: {numComponents: 3, buffer: vertex_generator.vertex_buffer.attribs.position.buffer, stride: BYTES_IN_VEC3, offset: 0},
-      position_right: {numComponents: 3, buffer: vertex_generator.vertex_buffer.attribs.position.buffer, stride: BYTES_IN_VEC3, offset: BYTES_IN_VEC3},
-      position_down: {numComponents: 3, buffer: vertex_generator.vertex_buffer.attribs.position.buffer, stride: BYTES_IN_VEC3, offset: POINTS_SIZE[0] * BYTES_IN_VEC3},
+      position: {numComponents: 3, buffer: vertex_positions, stride: BYTES_IN_VEC3, offset: VERTEX_BUFFER_OFFSET * BYTES_IN_VEC3},
+      position_right: {numComponents: 3, buffer: vertex_positions, stride: BYTES_IN_VEC3, offset: (VERTEX_BUFFER_OFFSET + 1) * BYTES_IN_VEC3},
+      position_down: {numComponents: 3, buffer: vertex_positions, stride: BYTES_IN_VEC3, offset: (VERTEX_BUFFER_OFFSET + POINTS_SIZE[0]) * BYTES_IN_VEC3},
+      position_left: {numComponents: 3, buffer: vertex_positions, stride: BYTES_IN_VEC3, offset: (VERTEX_BUFFER_OFFSET - 1) * BYTES_IN_VEC3},
+      position_up: {numComponents: 3, buffer: vertex_positions, stride: BYTES_IN_VEC3, offset: (VERTEX_BUFFER_OFFSET - POINTS_SIZE[0]) * BYTES_IN_VEC3},
       normal: vertex_generator.vertex_buffer.attribs.normal,
       indices: { numComponents: 3, data: this.generate_indices()},
     });
 
     const dummy_vertex_buffer_info = twgl.createBufferInfoFromArrays(gl, {
+      position: {numComponents: 1, data: 1, type: gl.FLOAT},
       position_right: {numComponents: 1, data: 1, type: gl.FLOAT},
       position_down: {numComponents: 1, data: 1, type: gl.FLOAT},
+      position_left: {numComponents: 1, data: 1, type: gl.FLOAT},
+      position_up: {numComponents: 1, data: 1, type: gl.FLOAT},
     });
 
     image.program = twgl.createProgramInfo(gl, [image_vertex_shader, image_fragment_shader]);
-
-    this.triangles_buffer_info = twgl.createBufferInfoFromArrays(gl, {
-      vertex_index: { numComponents: 1, data: _.range(POINTS_SIZE[0] * POINTS_SIZE[1])},  // TODO: Replace with gl_VertexID
-    });
 
     var frame = 0;
         
@@ -117,8 +141,19 @@ export default class Renderer extends React.Component{
 
         gl.viewport(0, 0, resolution[0], resolution[1]);
     
-        this.transform_feedback_draw(gl, vertex_generator.program, this.triangles_buffer_info, {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, vertex_generator.transform_feedback);
-        this.draw(gl, image.program, neighboring_vertex_buffer_info, {...uniforms, ...this.calculate_rotation_matrices(gl, time)});
+        this.transform_feedback_draw(
+          gl, 
+          vertex_generator.program, 
+          POINTS_SIZE[0] * POINTS_SIZE[1], 
+          {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, 
+          vertex_generator.transform_feedback,
+        );
+        this.draw(
+          gl, 
+          image.program, 
+          neighboring_vertex_buffer_info, 
+          {...uniforms, ...this.calculate_rotation_matrices(gl, time)}
+        );
         
         twgl.setBuffersAndAttributes(gl, image.program, dummy_vertex_buffer_info);  
         /*

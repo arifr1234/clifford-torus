@@ -7,5 +7,4 @@ A simple `TWGL.js` template, with `babel-plugin-inline-import` and `babel-inline
 3. Run ```npm i```
 
 ## TODO: 
-* WIP: Fix normal calculation in edges.
 * Remove old normal calculation and benchmark with the old branch.
