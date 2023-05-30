@@ -23,15 +23,16 @@ const float SQRT_5 = sqrt(5.);
 
 vec3 boys_surface(vec2 uv)
 {
-  float start = 0.01;
-  float strip_size = 0.3;
+  vec2 uv_size = vec2(mix(0.3, 1., 0.5 * (cos(time / 3.) + 1.)), 0.2);
 
-  vec2 normalized_uv = uv;
+  vec2 start = vec2((1. - uv_size.x) * 0.5 * (cos(time) + 1.), (1. - uv_size.y) * 0.5 * (sin(time) + 1.));
+
+  vec2 min_point = start + vec2(0, 0.01);
+  vec2 max_point = uv_size + start;
   
-  normalized_uv.y = (1. - strip_size - start) * 0.5 * (sin(time) + 1.) + start + normalized_uv.y * strip_size;
+  vec2 normalized_uv = mix(min_point, max_point, uv);
 
-  normalized_uv = normalized_uv * vec2(2. * PI, 1);
-
+  normalized_uv *= vec2(2. * PI, 1);
   vec2 w = normalized_uv.y * cis(normalized_uv.x);
 
   vec2 w_2 = c_sq(w);

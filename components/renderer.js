@@ -11,8 +11,8 @@ import vertex_generator_vertex_shader from "../shaders/vertex_generator_vertex_s
 import dummy_fragment_shader from "../shaders/dummy_fragment_shader.glsl";
 
 const POINTS_SIZE = [250, 25];
-const WRAP_AROUND = [true, false];
-const INCLUSIVE = [false, true];
+const WRAP_AROUND = [false, false];
+const INCLUSIVE = [true, true];
 
 export default class Renderer extends React.Component{
   constructor(props) {
