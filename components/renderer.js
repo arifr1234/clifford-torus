@@ -10,9 +10,9 @@ import image_fragment_shader from "../shaders/image_fragment_shader.glsl";
 import vertex_generator_vertex_shader from "../shaders/vertex_generator_vertex_shader.glsl";
 import dummy_fragment_shader from "../shaders/dummy_fragment_shader.glsl";
 
-const POINTS_SIZE = [50, 50];
-const WRAP_AROUND = [true, true];
-const INCLUSIVE = [false, false];
+const POINTS_SIZE = [250, 25];
+const WRAP_AROUND = [true, false];
+const INCLUSIVE = [false, true];
 
 export default class Renderer extends React.Component{
   constructor(props) {
@@ -36,10 +36,10 @@ export default class Renderer extends React.Component{
     twgl.setBuffersAndAttributes(gl, program, buffer_info);
     twgl.setUniforms(program, uniforms);
     
-    twgl.drawBufferInfo(gl, buffer_info);
+    twgl.drawBufferInfo(gl, buffer_info, gl.TRIANGLES);
   }
 
-  transform_feedback_draw(gl, program, count, uniforms, transform_feedback) {
+  transform_feedback_draw(gl, program, first, count, uniforms, transform_feedback) {
     gl.useProgram(program.program);
 
     gl.enable(gl.RASTERIZER_DISCARD);
@@ -48,7 +48,7 @@ export default class Renderer extends React.Component{
 
     twgl.setUniforms(program, uniforms);
     
-    gl.drawArrays(gl.TRIANGLES, 0, count);
+    gl.drawArrays(gl.TRIANGLES, first, count);
 
     gl.endTransformFeedback();
     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
@@ -136,7 +136,8 @@ export default class Renderer extends React.Component{
         const uniforms = {
             time: time * 0.001,
             resolution: resolution,
-            size: [POINTS_SIZE[0] - (INCLUSIVE[0] ? 1 : 0), POINTS_SIZE[1] - (INCLUSIVE[1] ? 1 : 0)],
+            size: POINTS_SIZE,
+            inclusive: [Number(INCLUSIVE[0]), Number(INCLUSIVE[1])],
         };
 
         gl.viewport(0, 0, resolution[0], resolution[1]);
@@ -144,7 +145,8 @@ export default class Renderer extends React.Component{
         this.transform_feedback_draw(
           gl, 
           vertex_generator.program, 
-          POINTS_SIZE[0] * POINTS_SIZE[1], 
+          0,  // TODO: Understand why not VERTEX_BUFFER_OFFSET?
+          POINTS_SIZE[0] * POINTS_SIZE[1] + 2,  // TODO: remove the +2.
           {rotation_4d: m4.rotateY(m4.identity(), time * 0.001), ...uniforms}, 
           vertex_generator.transform_feedback,
         );
@@ -169,7 +171,7 @@ export default class Renderer extends React.Component{
   }
 
   generate_indices() {
-    const STEP = 5;
+    const STEP = 1;
     const full_width = _.range(0, POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1), 1);
     const steps_width = _.range(0, POINTS_SIZE[0] - (WRAP_AROUND[0] ? 0 : 1), STEP);
 

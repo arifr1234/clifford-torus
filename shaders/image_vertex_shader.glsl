@@ -20,9 +20,7 @@ out vec4 i_color;
 void main() {
   gl_Position = u_worldViewProjection * vec4(position, 1) / vec4(1, 1, 100, 1);
 
-  float epsilon = 0.0001;
-
-  vec2 uv = vec2(gl_VertexID % size.x, gl_VertexID / size.x) / vec2(size);
+  vec2 uv = vec2(gl_VertexID % size.x, gl_VertexID / size.x) / vec2(size - 1);
 
   vec3 normal = normalize(
     (1. - uv.y) * (1. - uv.x) * cross(position - position_right, position - position_down) +
