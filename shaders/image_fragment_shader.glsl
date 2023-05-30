@@ -9,8 +9,6 @@ in vec4 i_color;
 
 out vec4 out_color;
 
-#define PI 3.14
-
 const float ambiant_color = 0.3;
 
 struct Light
@@ -20,7 +18,7 @@ struct Light
 };
 
 const Light lights[] = Light[](
-  Light(normalize(vec3(1, 2, 2)), vec3(0, 1, 1)),
+  // Light(normalize(vec3(-2, 1, 2)), vec3(0, 1, 1)),
   Light(normalize(vec3(-2, 1, 2)), vec3(1, 0, 1)),
   Light(normalize(vec3(1, -2, 2)), vec3(1, 1, 0))
 );
