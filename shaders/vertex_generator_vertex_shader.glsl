@@ -23,13 +23,40 @@ const float SQRT_5 = sqrt(5.);
 
 vec3 boys_surface(vec2 uv)
 {
-  vec2 uv_size = vec2(mix(0.3, 1., 0.5 * (cos(time / 3.) + 1.)), 0.2);
+  float t = time / 5.;
+  int stage = int(floor(t)) % 4;
 
-  vec2 start = vec2((1. - uv_size.x) * 0.5 * (cos(time) + 1.), (1. - uv_size.y) * 0.5 * (sin(time) + 1.));
+  t = mod(t, 1.);
 
-  vec2 min_point = start + vec2(0, 0.01);
-  vec2 max_point = uv_size + start;
-  
+  vec2 min_point;
+  vec2 max_point;
+
+  const float width = 0.15;
+  vec2 uv_size;
+  vec2 start;
+
+  switch (stage) {
+  case 0:
+      min_point = vec2(0, (1. - width) * smoothstep(0.5, 1., t));
+      max_point = vec2(1, smoothstep(0., 0.5, t));
+      break;
+  case 1:
+      uv_size = vec2(1. - smoothstep(0., 1., t), width);
+      start = vec2(0, (1. - width));
+
+      min_point = start;
+      max_point = start + uv_size;
+      break;
+  case 2:
+      min_point = vec2(0, (1. - smoothstep(0.3, 1., t)) * (1. - width));;
+      max_point = vec2(smoothstep(0., 1., t), 1.);;
+      break;
+  case 3:
+      min_point = vec2(0, smoothstep(0., 1., t));
+      max_point = vec2((1. - smoothstep(0., 1., t)), 1.);
+      break;
+  }
+
   vec2 normalized_uv = mix(min_point, max_point, uv);
 
   normalized_uv *= vec2(2. * PI, 1);
@@ -59,21 +86,6 @@ vec3 boys_surface(vec2 uv)
   );
 
   g = (g / sq(g)).xzy + vec3(0, 0.5, 0);
-
-  // if(ivec2(uv * vec2(size)) == ivec2(size.x-1, 4))
-  //   return 0.1 * g;
-
-  // if(ivec2(uv * vec2(size)) == ivec2(size.x-1, 3))
-  //   return 0.1 * g;
-
-  // if(ivec2(uv * vec2(size)) == ivec2(size.x-1, 2))
-  //   return 0.1 * g;
-
-  // if(ivec2(uv * vec2(size)) == ivec2(size.x-1, 1))
-  //   return 0.1 * g;
-
-  // if(ivec2(uv * vec2(size)) == ivec2(size.x-1, 0))
-  //   return 0.1 * g;
 
   return g;
 }
