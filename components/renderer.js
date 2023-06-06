@@ -10,7 +10,7 @@ import image_fragment_shader from "../shaders/image_fragment_shader.glsl";
 import vertex_generator_vertex_shader from "../shaders/vertex_generator_vertex_shader.glsl";
 import dummy_fragment_shader from "../shaders/dummy_fragment_shader.glsl";
 
-const POINTS_SIZE = [250, 25];
+const POINTS_SIZE = [500, 50];
 const WRAP_AROUND = [false, false];
 const INCLUSIVE = [true, true];
 
