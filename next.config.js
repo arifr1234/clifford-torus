@@ -2,6 +2,7 @@
 const nextConfig = {
   output: 'export',
   distDir: '_next',
+  assetPrefix: 'clifford-torus',
   swcMinify: true,
   webpack: (config, { defaultLoaders, dir }) => {
     const rulesExceptBabelLoaderRule = config.module.rules.filter(
