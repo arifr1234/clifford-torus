@@ -37,7 +37,7 @@ vec3 boys_surface(vec2 uv)
 
   switch (stage) {
   case 0:
-      min_point = vec2(0, (1. - width) * smoothstep(0.5, 1., t));
+      min_point = vec2(0, 0.0001 + (1. - width) * smoothstep(0.5, 1., t));
       max_point = vec2(1, smoothstep(0., 0.5, t));
       break;
   case 1:
@@ -52,8 +52,11 @@ vec3 boys_surface(vec2 uv)
       max_point = vec2(smoothstep(0., 1., t), 1.);;
       break;
   case 3:
-      min_point = vec2(0, smoothstep(0., 1., t));
-      max_point = vec2((1. - smoothstep(0., 1., t)), 1.);
+      uv_size = vec2((1. - smoothstep(0., 1., t)), 1. - smoothstep(0., 1., t));
+      start = vec2(0, 0.7 * smoothstep(0., 1., t));
+
+      min_point = start;
+      max_point = start + uv_size;
       break;
   }
 
